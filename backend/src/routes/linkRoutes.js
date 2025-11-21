@@ -8,7 +8,6 @@ const {
 } = require('../controllers/linkController');
 const { authenticateUser } = require('../middleware/userAuth');
 
-// Protected routes - require authentication
 router.post('/', authenticateUser, createLink);
 router.get('/', authenticateUser, getAllLinks);
 router.get('/:code', authenticateUser, getLinkStats);

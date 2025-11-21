@@ -9,7 +9,6 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Health check route
 app.get('/healthz', (req, res) => {
   res.status(200).json({
     ok: true,
@@ -26,13 +25,10 @@ app.get('/api/v1/health', (req, res) => {
   });
 });
 
-// Auth routes
 app.use('/api/v1/auth', authRoutes);
 
-// Link routes
 app.use('/api/v1/links', linkRoutes);
 
-// Redirect route (must be last)
 app.get('/:code', redirectToUrl);
 
 module.exports = app;

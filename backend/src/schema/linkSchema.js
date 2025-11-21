@@ -19,9 +19,9 @@ const createLinksTable = async () => {
 
   try {
     await pool.query(query);
-    console.log('✅ Links table created or already exists');
+    console.log('Links table created or already exists');
   } catch (error) {
-    console.error('❌ Error creating links table:', error.message);
+    console.error(' Error creating links table:', error.message);
     throw error;
   }
 };

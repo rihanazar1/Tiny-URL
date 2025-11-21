@@ -1,9 +1,8 @@
 const pool = require('../config/database');
 
-// Generate random short code
 const generateShortCode = () => {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  const length = Math.floor(Math.random() * 3) + 6; // 6-8 characters
+  const length = Math.floor(Math.random() * 3) + 6;
   let code = '';
   for (let i = 0; i < length; i++) {
     code += chars.charAt(Math.floor(Math.random() * chars.length));
@@ -11,7 +10,7 @@ const generateShortCode = () => {
   return code;
 };
 
-// Validate URL format
+
 const isValidUrl = (url) => {
   try {
     new URL(url);
@@ -21,19 +20,19 @@ const isValidUrl = (url) => {
   }
 };
 
-// Validate short code format
+
 const isValidShortCode = (code) => {
   const regex = /^[A-Za-z0-9]{6,8}$/;
   return regex.test(code);
 };
 
-// Create new short link
+
 const createLink = async (req, res) => {
   try {
     const { url, short_code } = req.body;
-    const userId = req.user.id; // Get user ID from authenticated user
+    const userId = req.user.id; 
 
-    // Validate URL
+
     if (!url) {
       return res.status(400).json({
         success: false,
@@ -50,7 +49,6 @@ const createLink = async (req, res) => {
 
     let finalShortCode = short_code;
 
-    // If custom code provided, validate it
     if (short_code) {
       if (!isValidShortCode(short_code)) {
         return res.status(400).json({
@@ -59,7 +57,6 @@ const createLink = async (req, res) => {
         });
       }
 
-      // Check if code already exists
       const existingCode = await pool.query(
         'SELECT id FROM links WHERE short_code = $1',
         [short_code]
@@ -72,7 +69,6 @@ const createLink = async (req, res) => {
         });
       }
     } else {
-      // Auto-generate unique code
       let attempts = 0;
       const maxAttempts = 10;
       
@@ -97,7 +93,6 @@ const createLink = async (req, res) => {
       }
     }
 
-    // Insert link into database with authenticated user's ID
     const newLink = await pool.query(
       'INSERT INTO links (short_code, url, user_id) VALUES ($1, $2, $3) RETURNING *',
       [finalShortCode, url, userId]
@@ -122,10 +117,9 @@ const createLink = async (req, res) => {
 
 
 
-// Get all links (only for authenticated user)
 const getAllLinks = async (req, res) => {
   try {
-    const userId = req.user.id; // Get authenticated user's ID
+    const userId = req.user.id; 
 
     const query = `
       SELECT l.*, u.username, u.email 
@@ -155,7 +149,6 @@ const getAllLinks = async (req, res) => {
 
 
 
-// Get single link stats (only if owned by authenticated user)
 const getLinkStats = async (req, res) => {
   try {
     const { code } = req.params;
@@ -193,20 +186,20 @@ const getLinkStats = async (req, res) => {
 
 
 
-// Delete link
 const deleteLink = async (req, res) => {
   try {
     const { code } = req.params;
+    const userId = req.user.id;
 
     const result = await pool.query(
-      'DELETE FROM links WHERE short_code = $1 RETURNING *',
-      [code]
+      'DELETE FROM links WHERE short_code = $1 AND user_id = $2 RETURNING *',
+      [code, userId]
     );
 
     if (result.rows.length === 0) {
       return res.status(404).json({
         success: false,
-        message: 'Link not found'
+        message: 'Link not found or you do not have permission to delete'
       });
     }
 
@@ -228,12 +221,10 @@ const deleteLink = async (req, res) => {
 
 
 
-// Redirect to original URL
 const redirectToUrl = async (req, res) => {
   try {
     const { code } = req.params;
 
-    // Get link
     const link = await pool.query(
       'SELECT * FROM links WHERE short_code = $1',
       [code]
@@ -246,13 +237,11 @@ const redirectToUrl = async (req, res) => {
       });
     }
 
-    // Update click stats
     await pool.query(
       'UPDATE links SET total_clicks = total_clicks + 1, last_clicked = NOW() WHERE short_code = $1',
       [code]
     );
 
-    // Redirect
     res.redirect(302, link.rows[0].url);
 
   } catch (error) {

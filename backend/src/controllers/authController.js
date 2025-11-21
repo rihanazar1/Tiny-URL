@@ -2,12 +2,11 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const pool = require('../config/database');
 
-// Register new user
+
 const register = async (req, res) => {
     try {
         const { username, email, password } = req.body;
 
-        // Validation
         if (!username || !email || !password) {
             return res.status(400).json({
                 success: false,
@@ -15,7 +14,6 @@ const register = async (req, res) => {
             });
         }
 
-        // Check if user already exists
         const userExists = await pool.query(
             'SELECT * FROM users WHERE email = $1 OR username = $2',
             [email, username]
@@ -28,17 +26,14 @@ const register = async (req, res) => {
             });
         }
 
-        // Hash password
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        // Insert user into database
         const newUser = await pool.query(
             'INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING id, username, email, created_at',
             [username, email, hashedPassword]
         );
 
-        // Generate JWT token
         const token = jwt.sign(
             { id: newUser.rows[0].id, email: newUser.rows[0].email },
             process.env.JWT_SECRET || 'your-secret-key',
@@ -64,12 +59,11 @@ const register = async (req, res) => {
     }
 };
 
-// Login user
+
 const login = async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        // Validation
         if (!email || !password) {
             return res.status(400).json({
                 success: false,
@@ -77,7 +71,6 @@ const login = async (req, res) => {
             });
         }
 
-        // Check if user exists
         const user = await pool.query(
             'SELECT * FROM users WHERE email = $1',
             [email]
@@ -90,7 +83,6 @@ const login = async (req, res) => {
             });
         }
 
-        // Verify password
         const isPasswordValid = await bcrypt.compare(password, user.rows[0].password);
 
         if (!isPasswordValid) {
@@ -100,14 +92,12 @@ const login = async (req, res) => {
             });
         }
 
-        // Generate JWT token
         const token = jwt.sign(
             { id: user.rows[0].id, email: user.rows[0].email },
             process.env.JWT_SECRET || 'your-secret-key',
             { expiresIn: '7d' }
         );
 
-        // Remove password from response
         const { password: _, ...userWithoutPassword } = user.rows[0];
 
         res.status(200).json({
