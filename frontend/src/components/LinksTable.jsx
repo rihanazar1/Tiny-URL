@@ -17,7 +17,7 @@ const LinksTable = ({ links, isLoading }) => {
   };
 
   const viewStats = (code) => {
-    navigate(`/stats/${code}`);
+    navigate(`/code/${code}`);
   };
 
   const handleDelete = async (code) => {

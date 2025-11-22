@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Plus, Search, Link2 } from 'lucide-react';
-import { useGetLinksByUserQuery } from '../../store/api/linksApi';
+import { useGetAllLinksQuery } from '../../store/api/linksApi';
 import AddLinkForm from '../../components/AddLinkForm';
 import LinksTable from '../../components/LinksTable';
 import Button from '../../components/Button';
@@ -11,7 +11,7 @@ const Dashboard = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  const { data, isLoading, error } = useGetLinksByUserQuery();
+  const { data, isLoading, error } = useGetAllLinksQuery();
 
   const links = data?.data || [];
 

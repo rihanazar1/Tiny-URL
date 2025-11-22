@@ -4,16 +4,13 @@ const {
   createLink,
   getAllLinks,
   getLinkStats,
-  deleteLink,
-  getLinksByUser
+  deleteLink
 } = require('../controllers/linkController');
-const { authenticateUser } = require('../middleware/userAuth');
 
-
-router.post('/', authenticateUser, createLink);
-router.get('/', authenticateUser, getAllLinks);
-router.get('/user/me', authenticateUser, getLinksByUser); 
-router.get('/:code', authenticateUser, getLinkStats);
-router.delete('/:code', authenticateUser, deleteLink);
+// Public routes - no authentication required
+router.post('/', createLink);
+router.get('/', getAllLinks);
+router.get('/:code', getLinkStats);
+router.delete('/:code', deleteLink);
 
 module.exports = router;

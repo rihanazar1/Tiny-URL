@@ -30,7 +30,6 @@ const isValidShortCode = (code) => {
 const createLink = async (req, res) => {
   try {
     const { url, short_code } = req.body;
-    const userId = req.user.id;
 
 
     if (!url) {
@@ -94,8 +93,8 @@ const createLink = async (req, res) => {
     }
 
     const newLink = await pool.query(
-      'INSERT INTO links (short_code, url, user_id) VALUES ($1, $2, $3) RETURNING *',
-      [finalShortCode, url, userId]
+      'INSERT INTO links (short_code, url) VALUES ($1, $2) RETURNING *',
+      [finalShortCode, url]
     );
 
     res.status(201).json({
@@ -119,17 +118,12 @@ const createLink = async (req, res) => {
 
 const getAllLinks = async (req, res) => {
   try {
-    const userId = req.user.id;
-
     const query = `
-      SELECT l.*, u.username, u.email 
-      FROM links l 
-      LEFT JOIN users u ON l.user_id = u.id
-      WHERE l.user_id = $1
-      ORDER BY l.created_at DESC
+      SELECT * FROM links
+      ORDER BY created_at DESC
     `;
 
-    const links = await pool.query(query, [userId]);
+    const links = await pool.query(query);
 
     res.status(200).json({
       success: true,
@@ -152,20 +146,16 @@ const getAllLinks = async (req, res) => {
 const getLinkStats = async (req, res) => {
   try {
     const { code } = req.params;
-    const userId = req.user.id;
 
     const link = await pool.query(
-      `SELECT l.*, u.username, u.email 
-       FROM links l 
-       LEFT JOIN users u ON l.user_id = u.id 
-       WHERE l.short_code = $1 AND l.user_id = $2`,
-      [code, userId]
+      `SELECT * FROM links WHERE short_code = $1`,
+      [code]
     );
 
     if (link.rows.length === 0) {
       return res.status(404).json({
         success: false,
-        message: 'Link not found or you do not have access'
+        message: 'Link not found'
       });
     }
 
@@ -189,17 +179,16 @@ const getLinkStats = async (req, res) => {
 const deleteLink = async (req, res) => {
   try {
     const { code } = req.params;
-    const userId = req.user.id;
 
     const result = await pool.query(
-      'DELETE FROM links WHERE short_code = $1 AND user_id = $2 RETURNING *',
-      [code, userId]
+      'DELETE FROM links WHERE short_code = $1 RETURNING *',
+      [code]
     );
 
     if (result.rows.length === 0) {
       return res.status(404).json({
         success: false,
-        message: 'Link not found or you do not have permission to delete'
+        message: 'Link not found'
       });
     }
 
@@ -220,53 +209,6 @@ const deleteLink = async (req, res) => {
 };
 
 
-
-// Get links by authenticated user
-const getLinksByUser = async (req, res) => {
-  try {
-    const userId = req.user.id; // Authenticated user ki ID
-    
-    console.log('Fetching links for user ID:', userId); // Debug log
-
-    const query = `
-      SELECT 
-        l.id,
-        l.short_code,
-        l.url,
-        l.total_clicks,
-        l.last_clicked,
-        l.created_at,
-        l.user_id,
-        u.username,
-        u.email
-      FROM links l 
-      LEFT JOIN users u ON l.user_id = u.id
-      WHERE l.user_id = $1
-      ORDER BY l.created_at DESC
-    `;
-
-    const result = await pool.query(query, [userId]);
-    
-    console.log('Query result:', result.rows); // Debug log
-    console.log('Number of links found:', result.rows.length); // Debug log
-
-    res.status(200).json({
-      success: true,
-      message: 'Links fetched successfully',
-      count: result.rows.length,
-      user_id: userId,
-      data: result.rows
-    });
-
-  } catch (error) {
-    console.error('Get links by user error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error while fetching user links',
-      error: error.message
-    });
-  }
-};
 
 const redirectToUrl = async (req, res) => {
   try {
@@ -306,6 +248,5 @@ module.exports = {
   getAllLinks,
   getLinkStats,
   deleteLink,
-  redirectToUrl,
-  getLinksByUser
+  redirectToUrl
 };

@@ -47,7 +47,7 @@ const LinkStats = () => {
         <div className="max-w-4xl mx-auto">
           <Button
             variant="ghost"
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate('/')}
             className="mb-6"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -62,7 +62,7 @@ const LinkStats = () => {
                 ? 'This link does not exist or you do not have access to it.'
                 : 'Failed to load link stats. Please try again.'}
             </p>
-            <Button variant="primary" onClick={() => navigate('/dashboard')}>
+            <Button variant="primary" onClick={() => navigate('/')}>
               Go to Dashboard
             </Button>
           </Card>
@@ -77,7 +77,7 @@ const LinkStats = () => {
         {/* Back Button */}
         <Button
           variant="ghost"
-          onClick={() => navigate('/dashboard')}
+          onClick={() => navigate('/')}
           className="mb-6"
         >
           <ArrowLeft className="w-4 h-4" />
