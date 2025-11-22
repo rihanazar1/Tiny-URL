@@ -30,7 +30,7 @@ const isValidShortCode = (code) => {
 const createLink = async (req, res) => {
   try {
     const { url, short_code } = req.body;
-    const userId = req.user.id; 
+    const userId = req.user.id;
 
 
     if (!url) {
@@ -71,14 +71,14 @@ const createLink = async (req, res) => {
     } else {
       let attempts = 0;
       const maxAttempts = 10;
-      
+
       while (attempts < maxAttempts) {
         finalShortCode = generateShortCode();
         const existingCode = await pool.query(
           'SELECT id FROM links WHERE short_code = $1',
           [finalShortCode]
         );
-        
+
         if (existingCode.rows.length === 0) {
           break;
         }
@@ -119,7 +119,7 @@ const createLink = async (req, res) => {
 
 const getAllLinks = async (req, res) => {
   try {
-    const userId = req.user.id; 
+    const userId = req.user.id;
 
     const query = `
       SELECT l.*, u.username, u.email 
@@ -221,6 +221,53 @@ const deleteLink = async (req, res) => {
 
 
 
+// Get links by authenticated user
+const getLinksByUser = async (req, res) => {
+  try {
+    const userId = req.user.id; // Authenticated user ki ID
+    
+    console.log('Fetching links for user ID:', userId); // Debug log
+
+    const query = `
+      SELECT 
+        l.id,
+        l.short_code,
+        l.url,
+        l.total_clicks,
+        l.last_clicked,
+        l.created_at,
+        l.user_id,
+        u.username,
+        u.email
+      FROM links l 
+      LEFT JOIN users u ON l.user_id = u.id
+      WHERE l.user_id = $1
+      ORDER BY l.created_at DESC
+    `;
+
+    const result = await pool.query(query, [userId]);
+    
+    console.log('Query result:', result.rows); // Debug log
+    console.log('Number of links found:', result.rows.length); // Debug log
+
+    res.status(200).json({
+      success: true,
+      message: 'Links fetched successfully',
+      count: result.rows.length,
+      user_id: userId,
+      data: result.rows
+    });
+
+  } catch (error) {
+    console.error('Get links by user error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while fetching user links',
+      error: error.message
+    });
+  }
+};
+
 const redirectToUrl = async (req, res) => {
   try {
     const { code } = req.params;
@@ -259,5 +306,6 @@ module.exports = {
   getAllLinks,
   getLinkStats,
   deleteLink,
-  redirectToUrl
+  redirectToUrl,
+  getLinksByUser
 };
